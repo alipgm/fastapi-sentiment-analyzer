@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block title %}تحلیلگر هوشمند احساسات{% endblock %}
+
+{% block content %}
+<style>
+    .grid-container {
+        display: grid;
+        grid-template-columns: 1fr 1.5fr;
+        gap: 2rem;
+        align-items: start;
+    }
+
+    @media (max-width: 992px) {
+        .grid-container {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Form Styles */
+    #analysis-form textarea {
+        width: 100%;
+        min-height: 150px;
+        padding: 0.75rem;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        font-size: 1rem;
+        resize: vertical;
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    #analysis-form textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+    }
+
+    #analysis-form button {
+        width: 100%;
+        padding: 0.75rem;
+        font-size: 1.1rem;
+        font-weight: 700;
+        background-color: var(--primary-color);
+        border: none;
+        color: white;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        margin-top: 1rem;
+    }
+
+    #analysis-form button:hover {
+        background-color: var(--primary-hover-color);
+    }
+    
+    #analysis-form button[aria-busy='true'] {
+        background-color: var(--neutral-color);
+        cursor: not-allowed;
+    }
+
+    /* Result Display Styles */
+    #result-card {
+        padding: 1.5rem;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+        border: 1px solid var(--border-color);
+        display: none; /* Hidden by default */
+        animation: fadeIn 0.5s ease-in-out;
+        margin-top: 2rem;
+    }
+    
+    #result-card h4 {
+        margin-top: 0;
+        color: var(--primary-color);
+    }
+
+    .sentiment-icon {
+        font-size: 1.5rem;
+        margin-right: 0.5rem;
+    }
+    .sentiment-مثبت { color: var(--positive-color); font-weight: 700; }
+    .sentiment-منفی { color: var(--negative-color); font-weight: 700; }
+    .sentiment-خنثی { color: var(--neutral-color); font-weight: 700; }
+
+    /* History Table Styles */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 1rem;
+        text-align: right;
+        border-bottom: 1px solid var(--border-color);
+        vertical-align: middle;
+    }
+
+    thead th {
+        background-color: #f8f9fa;
+        font-weight: 700;
+    }
+
+    tbody tr:hover {
+        background-color: #f1f3f5;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .btn-delete {
+        background-color: transparent;
+        border: 1px solid var(--negative-color);
+        color: var(--negative-color);
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        transition: all 0.2s;
+    }
+    .btn-delete:hover {
+        background-color: var(--negative-color);
+        color: white;
+    }
+    #clear-all-btn {
+        background-color: var(--negative-color);
+        border-color: var(--negative-color);
+        color: white;
+        margin-bottom: 1rem;
+        float: left; 
+    }
+    #clear-all-btn:hover {
+        background-color: #a71d2a;
+    }
+</style>
+
+<div class="grid-container">
+    <!-- Left Column: Form and Result -->
+    <aside>
+        <article>
+            <header>
+                <h3>تحلیل متن جدید</h3>
+            </header>
+            <form id="analysis-form">
+                <textarea id="text-input" name="text" required placeholder="مثال: این فیلم واقعا فوق‌العاده بود و از دیدنش لذت بردم..."></textarea>
+                <button type="submit" id="submit-btn">تحلیل کن</button>
+            </form>
+        </article>
+        
+        <div id="result-card">
+            <h4>نتیجه تحلیل</h4>
+            <p><strong>احساسات:</strong> <span id="result-sentiment"></span></p>
+            <p><strong>امتیاز:</strong> <span id="result-score"></span></p>
+            <hr>
+            <p><strong>متن اصلی:</strong></p>
+            <blockquote id="result-text"></blockquote>
+        </div>
+    </aside>
+
+    <!-- Right Column: History -->
+    <article>
+        <header style="display: flex; justify-content: space-between; align-items: center;">
+            <h3>تاریخچه تحلیل‌ها</h3>
+            <button id="clear-all-btn" class="btn-delete">پاک کردن کل تاریخچه</button>
+        </header>
+        <table>
+            <thead>
+                <tr>
+                    <th>احساسات</th>
+                    <th>متن</th>
+                    <th>امتیاز</th>
+                    <th>عملیات</th> 
+                </tr>
+            </thead>
+            <tbody id="history-table-body">
+                {% for item in history %}
+                <tr id="history-item-{{ item.id }}"> 
+                    <td>
+                        <span class="sentiment-{{ item.sentiment }}">
+                            {% if item.sentiment == 'مثبت' %}😊
+                            {% elif item.sentiment == 'منفی' %}😠
+                            {% else %}😐
+                            {% endif %}
+                            {{ item.sentiment }}
+                        </span>
+                    </td>
+                    <td>{{ item.text }}</td>
+                    <td>{{ item.score }}</td>
+                    <td>
+                        <button class="btn-delete" data-item-id="{{ item.id }}">حذف</button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr id="no-history-row">
+                    <td colspan="4" style="text-align: center;">هنوز تحلیلی ثبت نشده است.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </article>
+</div>
+
+<script>
+    const form = document.getElementById('analysis-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const historyTableBody = document.getElementById('history-table-body');
+    const notification = document.getElementById('notification');
+    const clearAllBtn = document.getElementById('clear-all-btn');
+    const resultCard = document.getElementById('result-card');
+    const resultSentiment = document.getElementById('result-sentiment');
+    const resultScore = document.getElementById('result-score');
+    const resultText = document.getElementById('result-text');
+    const sentimentIcons = { 'مثبت': '😊', 'منفی': '😠', 'خنثی': '😐' };
+
+    function showNotification(message, isError = true) {
+        notification.textContent = message;
+        notification.style.backgroundColor = isError ? 'var(--negative-color)' : 'var(--positive-color)';
+        notification.classList.add('show');
+        setTimeout(() => { notification.classList.remove('show'); }, 3000);
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const text = document.getElementById('text-input').value;
+        if (!text.trim()) {
+            showNotification("لطفا متنی برای تحلیل وارد کنید.");
+            return;
+        }
+        submitBtn.setAttribute('aria-busy', 'true');
+        submitBtn.textContent = 'در حال تحلیل...';
+        resultCard.style.display = 'none';
+
+        try {
+            const response = await fetch('/api/v1/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text })
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'خطایی رخ داد');
+            }
+            window.location.reload();
+        } catch (error) {
+            showNotification(`خطا: ${error.message}`);
+        } finally {
+            submitBtn.removeAttribute('aria-busy');
+            submitBtn.textContent = 'تحلیل کن';
+        }
+    });
+
+    historyTableBody.addEventListener('click', async (e) => {
+        if (e.target && e.target.classList.contains('btn-delete')) {
+            const button = e.target;
+            const itemId = button.dataset.itemId; 
+
+            if (!itemId || !confirm(`آیا از حذف این آیتم مطمئن هستید؟`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/v1/history/${itemId}`, { method: 'DELETE' });
+                if (!response.ok) {
+                    throw new Error('حذف آیتم با خطا مواجه شد.');
+                }
+                button.closest('tr').remove();
+                showNotification('آیتم با موفقیت حذف شد.', false);
+            } catch (error) {
+                showNotification(error.message);
+            }
+        }
+    });
+
+    clearAllBtn.addEventListener('click', async () => {
+        if (!confirm('!!! آیا از حذف کل تاریخچه مطمئن هستید؟ این عمل غیرقابل بازگشت است.')) {
+            return;
+        }
+        try {
+            const response = await fetch('/api/v1/history/clear-all', { method: 'DELETE' });
+            if (!response.ok) {
+                throw new Error('حذف تاریخچه با خطا مواجه شد.');
+            }
+            historyTableBody.innerHTML = `
+                <tr id="no-history-row">
+                    <td colspan="4" style="text-align: center;">تاریخچه پاک شد.</td>
+                </tr>
+            `;
+            showNotification('کل تاریخچه با موفقیت حذف شد.', false);
+        } catch (error) {
+            showNotification(error.message);
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,20 @@
+# Virtual Environment
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Database file
+*.db
+*.sqlite3
+
+# Environment variables file
+.env
+
+# Log files
+*.log
+
+# Local model folder
+sentiment-model-local/
