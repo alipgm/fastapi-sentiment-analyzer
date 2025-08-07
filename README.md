@@ -1,8 +1,6 @@
 Sentim-API: Intelligent Sentiment Analyzer
 A powerful and professional web service (API) based on FastAPI for analyzing the sentiment of Persian texts. This project is designed as a complete portfolio piece to demonstrate mastery of key modern backend development concepts with Python, including database interaction, migration management, and AI model integration.
 
-![تصویری از رابط کاربری وب Sentim-API]
-
 ✨ Key Features
 Sentiment Analysis API: Receives text and returns its sentiment (positive, negative, or neutral).
 
@@ -55,33 +53,6 @@ Strengths: Due to its training on real-world reviews, it is very powerful in det
 Potential Limitations: Since the training data is primarily focused on food and restaurant reviews, it may face challenges when analyzing highly specialized texts (such as scientific or literary documents).
 
 In this project, we use the model in an offline mode. A separate script (download_model.py) is responsible for downloading and saving the model to a local directory, and the main application loads the model from the disk. This approach significantly increases the application's stability and startup speed.
-
-🏗️ Project Structure
-fastapi-sentiment-analyzer/
-├── .env                      # Environment variables file (for token)
-├── .gitignore                # Specifies intentionally untracked files to ignore
-├── alembic/                  # Alembic configuration folder
-├── app/                      # Main application source code
-│   ├── __init__.py
-│   ├── crud.py               # Database operations functions (CRUD)
-│   ├── database.py           # Database connection settings
-│   ├── logger_config.py      # Advanced logging configuration
-│   ├── main.py               # FastAPI application entry point
-│   ├── models.py             # SQLAlchemy ORM models
-│   ├── schemas.py            # Pydantic models
-│   ├── routers/              # Router modules
-│   │   ├── analysis.py       # Text analysis endpoints
-│   │   ├── history.py        # History deletion endpoints
-│   │   └── pages.py          # Web page endpoints
-│   └── templates/            # HTML templates (Jinja2)
-│       └── index.html
-│       └── base.html
-├── alembic.ini               # Alembic config file
-├── analysis_log.log          # Log output file
-├── download_model.py         # Offline model download script
-├── README.md                 # This file
-├── .gitignore
-└── requirements.txt          # List of required libraries
 
 🚀 Setup and Execution
 Prerequisite: Python 3.9 or higher
